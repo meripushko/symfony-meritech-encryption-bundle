@@ -34,7 +34,7 @@ class OpenSslAesGcmEncryptor implements EncryptorInterface
             $tag,
             $this->aad
         );
-        if ($ciphertext === false) {
+        if (false === $ciphertext) {
             throw new \RuntimeException('Encryption failed.');
         }
 
@@ -44,14 +44,15 @@ class OpenSslAesGcmEncryptor implements EncryptorInterface
             'iv' => base64_encode($iv),
             'tag' => base64_encode($tag),
             'ct' => base64_encode($ciphertext),
-            'typ' => $type === 'json' ? 'json' : 'plain',
+            'typ' => 'json' === $type ? 'json' : 'plain',
         ];
-        if ($kid !== null) {
+        if (null !== $kid) {
             $envelope['kid'] = $kid;
         }
 
         $json = json_encode($envelope, JSON_THROW_ON_ERROR);
-        return $this->prefix . $json;
+
+        return $this->prefix.$json;
     }
 
     public function decryptToType(string $ciphertext): mixed
@@ -66,7 +67,7 @@ class OpenSslAesGcmEncryptor implements EncryptorInterface
         $tag = base64_decode($env['tag'] ?? '', true);
         $ct = base64_decode($env['ct'] ?? '', true);
 
-        if ($iv === false || $tag === false || $ct === false) {
+        if (false === $iv || false === $tag || false === $ct) {
             throw new \RuntimeException('Invalid envelope encoding.');
         }
 
@@ -81,12 +82,12 @@ class OpenSslAesGcmEncryptor implements EncryptorInterface
             $tag,
             $this->aad
         );
-        if ($plaintext === false) {
+        if (false === $plaintext) {
             throw new \RuntimeException('Decryption failed.');
         }
 
         $typ = $env['typ'] ?? 'plain';
-        if ($typ === 'json') {
+        if ('json' === $typ) {
             return json_decode($plaintext, true, 512, JSON_THROW_ON_ERROR);
         }
 
@@ -95,13 +96,14 @@ class OpenSslAesGcmEncryptor implements EncryptorInterface
 
     private function normalizePlaintext(mixed $value, string $type): string
     {
-        if ($value === null) {
+        if (null === $value) {
             // Represent null as empty string; attribute's nullable controls whether we encrypt or skip
             return '';
         }
-        if ($type === 'json') {
+        if ('json' === $type) {
             return json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
         }
+
         return is_string($value) ? $value : (string) $value;
     }
 }

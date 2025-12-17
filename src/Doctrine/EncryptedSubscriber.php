@@ -2,13 +2,13 @@
 
 namespace Meritech\EncryptionBundle\Doctrine;
 
-use Meritech\EncryptionBundle\Crypto\EncryptorInterface;
-use Meritech\EncryptionBundle\Metadata\MetadataLocator;
+use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostLoadEventArgs;
-use Doctrine\Common\EventSubscriber;
+use Doctrine\ORM\Events;
+use Meritech\EncryptionBundle\Crypto\EncryptorInterface;
+use Meritech\EncryptionBundle\Metadata\MetadataLocator;
 
 class EncryptedSubscriber implements EventSubscriber
 {
@@ -49,17 +49,17 @@ class EncryptedSubscriber implements EventSubscriber
         }
 
         $props = $this->metadataLocator->getEncryptedProperties($class);
-        if ($props === []) {
+        if ([] === $props) {
             return;
         }
 
         foreach ($props as $name => $meta) {
             $rp = $this->metadataLocator->getReflectionProperty($class, $name);
-            if ($rp === null) {
+            if (null === $rp) {
                 continue;
             }
             $value = $rp->getValue($entity);
-            if ($value === null) {
+            if (null === $value) {
                 // Preserve null if allowed
                 if ($meta->nullable) {
                     continue;
@@ -83,18 +83,18 @@ class EncryptedSubscriber implements EventSubscriber
             return;
         }
         $props = $this->metadataLocator->getEncryptedProperties($class);
-        if ($props === []) {
+        if ([] === $props) {
             return;
         }
 
         $changed = false;
         foreach ($props as $name => $meta) {
             $rp = $this->metadataLocator->getReflectionProperty($class, $name);
-            if ($rp === null) {
+            if (null === $rp) {
                 continue;
             }
             $value = $rp->getValue($entity);
-            if ($value === null) {
+            if (null === $value) {
                 if ($meta->nullable) {
                     continue;
                 }
@@ -107,7 +107,7 @@ class EncryptedSubscriber implements EventSubscriber
                 continue;
             }
 
-            if ($meta->type === 'json' && !is_array($value)) {
+            if ('json' === $meta->type && !is_array($value)) {
                 // Allow string JSON inputs, decode if possible; else wrap scalar
                 if (is_string($value)) {
                     try {

@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 use Meritech\EncryptionBundle\Crypto\KeyProvider;
 use Meritech\EncryptionBundle\Crypto\OpenSslAesGcmEncryptor;
@@ -28,4 +28,4 @@ $back2 = $enc->decryptToType($cipher2);
 
 echo "JSON roundtrip: \n";
 echo "  cipher: $cipher2\n";
-echo "  plain:  " . json_encode($back2, JSON_UNESCAPED_UNICODE) . "\n";
+echo '  plain:  '.json_encode($back2, JSON_UNESCAPED_UNICODE)."\n";

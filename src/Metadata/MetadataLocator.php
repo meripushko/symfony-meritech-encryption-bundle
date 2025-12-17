@@ -3,15 +3,13 @@
 namespace Meritech\EncryptionBundle\Metadata;
 
 use Meritech\EncryptionBundle\Attribute\Encrypted;
-use ReflectionClass;
-use ReflectionProperty;
 
 class MetadataLocator
 {
     /** @var array<class-string, array<string, EncryptedProperty>> */
     private array $cache = [];
 
-    /** @var array<class-string, array<string, ReflectionProperty>> */
+    /** @var array<class-string, array<string, \ReflectionProperty>> */
     private array $refCache = [];
 
     /**
@@ -23,12 +21,12 @@ class MetadataLocator
             return $this->cache[$class];
         }
 
-        $rc = new ReflectionClass($class);
+        $rc = new \ReflectionClass($class);
         $props = [];
         $refMap = [];
         foreach ($rc->getProperties() as $prop) {
             $attributes = $prop->getAttributes(Encrypted::class, \ReflectionAttribute::IS_INSTANCEOF);
-            if (count($attributes) === 0) {
+            if (0 === count($attributes)) {
                 continue;
             }
             $instance = $attributes[0]->newInstance();
@@ -39,12 +37,14 @@ class MetadataLocator
 
         $this->cache[$class] = $props;
         $this->refCache[$class] = $refMap;
+
         return $props;
     }
 
-    public function getReflectionProperty(string $class, string $property): ?ReflectionProperty
+    public function getReflectionProperty(string $class, string $property): ?\ReflectionProperty
     {
         $this->getEncryptedProperties($class); // ensure cache warm
+
         return $this->refCache[$class][$property] ?? null;
     }
 }

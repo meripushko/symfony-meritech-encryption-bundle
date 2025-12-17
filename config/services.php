@@ -2,8 +2,8 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Meritech\EncryptionBundle\Crypto\OpenSslAesGcmEncryptor;
 use Meritech\EncryptionBundle\Crypto\KeyProvider;
+use Meritech\EncryptionBundle\Crypto\OpenSslAesGcmEncryptor;
 use Meritech\EncryptionBundle\Doctrine\EncryptedSubscriber;
 use Meritech\EncryptionBundle\Metadata\MetadataLocator;
 

@@ -7,9 +7,9 @@ class KeyProvider
     private ?string $currentKey = null; // binary
 
     /**
-     * @param string      $keyEnv     The key from env (supports base64:/hex: prefixes) resolved by Symfony env processor.
-     * @param string|null $currentKid Optional current key id for rotation.
-     * @param array       $keys       Optional map of kid => key string (same encoding as $keyEnv).
+     * @param string      $keyEnv     the key from env (supports base64:/hex: prefixes) resolved by Symfony env processor
+     * @param string|null $currentKid optional current key id for rotation
+     * @param array       $keys       optional map of kid => key string (same encoding as $keyEnv)
      */
     public function __construct(
         private readonly string $keyEnv,
@@ -20,9 +20,10 @@ class KeyProvider
 
     public function getCurrentKey(): string
     {
-        if ($this->currentKey === null) {
+        if (null === $this->currentKey) {
             $this->currentKey = $this->parseKey($this->keyEnv);
         }
+
         return $this->currentKey;
     }
 
@@ -33,13 +34,14 @@ class KeyProvider
 
     public function getKeyForKid(?string $kid): string
     {
-        if ($kid === null) {
+        if (null === $kid) {
             return $this->getCurrentKey();
         }
         if (!array_key_exists($kid, $this->keys)) {
             // Fallback to current key
             return $this->getCurrentKey();
         }
+
         return $this->parseKey($this->keys[$kid]);
     }
 
@@ -54,12 +56,13 @@ class KeyProvider
         } else {
             $bin = $raw;
         }
-        if ($bin === false || $bin === null) {
+        if (false === $bin || null === $bin) {
             throw new \InvalidArgumentException('Invalid encryption key encoding.');
         }
-        if (strlen($bin) !== 32) {
+        if (32 !== strlen($bin)) {
             throw new \InvalidArgumentException('AES-256-GCM key must be exactly 32 bytes.');
         }
+
         return $bin;
     }
 }

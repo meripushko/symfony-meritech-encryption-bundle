@@ -2,14 +2,12 @@
 
 namespace Meritech\EncryptionBundle\Attribute;
 
-use Attribute;
-
-#[Attribute(Attribute::TARGET_PROPERTY)]
+#[\Attribute(\Attribute::TARGET_PROPERTY)]
 class Encrypted
 {
     /**
-     * @param string $type   'string' or 'json'
-     * @param bool   $nullable Whether null values are allowed (nulls are not encrypted)
+     * @param string $type          'string' or 'json'
+     * @param bool   $nullable      Whether null values are allowed (nulls are not encrypted)
      * @param bool   $deterministic If true, indicates desire for deterministic encryption (not recommended for GCM). Currently advisory only.
      */
     public function __construct(

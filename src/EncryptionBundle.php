@@ -2,8 +2,8 @@
 
 namespace Meritech\EncryptionBundle;
 
-use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
-class EncryptionBundle extends Bundle
+class EncryptionBundle extends AbstractBundle
 {
 }

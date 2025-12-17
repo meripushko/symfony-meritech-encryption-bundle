@@ -1,0 +1,20 @@
+{
+  "name": "meritech/encrypted-attribute-bundle",
+  "description": "Symfony bundle providing an Encrypted attribute for Doctrine entities with transparent AES-256-GCM encryption.",
+  "type": "symfony-bundle",
+  "license": "MIT",
+  "require": {
+    "php": "^8.1",
+    "ext-openssl": "*",
+    "symfony/framework-bundle": "^5.4 || ^6.4 || ^7.0",
+    "doctrine/orm": "^2.15 || ^3.0",
+    "doctrine/doctrine-bundle": "^2.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "Meritech\\EncryptionBundle\\": "src/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

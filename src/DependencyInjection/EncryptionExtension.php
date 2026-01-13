@@ -1,51 +1,125 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Meritech\EncryptionBundle\DependencyInjection;
 
+use Doctrine\DBAL\Types\Type;
+use Meritech\EncryptionBundle\Crypto\AesGcmEncryptor;
+use Meritech\EncryptionBundle\Crypto\BlindIndexer;
+use Meritech\EncryptionBundle\Crypto\DeterministicEncryptor;
 use Meritech\EncryptionBundle\Crypto\KeyProvider;
-use Meritech\EncryptionBundle\Crypto\OpenSslAesGcmEncryptor;
-use Meritech\EncryptionBundle\Doctrine\EncryptedSubscriber;
-use Symfony\Component\Config\FileLocator;
+use Meritech\EncryptionBundle\DBAL\Type\BlindIndexType;
+use Meritech\EncryptionBundle\DBAL\Type\DeterministicEncryptedStringType;
+use Meritech\EncryptionBundle\DBAL\Type\EncryptedJsonType;
+use Meritech\EncryptionBundle\DBAL\Type\EncryptedStringType;
+use Meritech\EncryptionBundle\DBAL\Type\EncryptedTextType;
+use Meritech\EncryptionBundle\Doctrine\BlindIndexSubscriber;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
-use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use Symfony\Component\DependencyInjection\Reference;
 
-class EncryptionExtension extends Extension
+final class EncryptionExtension extends Extension
 {
-    public function load(array $configs, ContainerBuilder $container)
+    private const TYPE_MAP = [
+        'encrypted_string' => EncryptedStringType::class,
+        'encrypted_text' => EncryptedTextType::class,
+        'encrypted_json' => EncryptedJsonType::class,
+        'encrypted_string_deterministic' => DeterministicEncryptedStringType::class,
+        'blind_index' => BlindIndexType::class,
+    ];
+
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../../config'));
-        $loader->load('services.php');
+        $this->registerKeyProvider($container, $config);
+        $this->registerEncryptors($container, $config);
+        $this->registerBlindIndexer($container, $config);
+        $this->registerDoctrineSubscriber($container);
+        $this->registerDbalTypes($config);
+    }
 
-        // Bind configurable args
-        if (isset($config['current_kid'])) {
-            $container->setParameter('meritech_encryption.current_kid', $config['current_kid']);
-        } else {
-            $container->setParameter('meritech_encryption.current_kid', null);
-        }
-        $container->setParameter('meritech_encryption.keys', $config['keys'] ?? []);
-        $container->setParameter('meritech_encryption.prefix', $config['prefix']);
-        $container->setParameter('meritech_encryption.aad', $config['aad']);
-        $container->setParameter('meritech_encryption.excluded_entities', $config['excluded_entities']);
+    private function registerKeyProvider(ContainerBuilder $container, array $config): void
+    {
+        $definition = new Definition(KeyProvider::class);
+        $definition->setArguments([
+            $config['key']['value'],
+            $config['key']['id'],
+            $config['rotated_keys'],
+            $config['blind_index_key'],
+        ]);
 
-        // Update service definitions
-        if ($container->hasDefinition(KeyProvider::class)) {
-            $def = $container->getDefinition(KeyProvider::class);
-            // Note: key_env dynamic env is not supported easily; keep using ENCRYPTION_KEY from services.php
-            $def->setArgument('$currentKid', '%meritech_encryption.current_kid%');
-            $def->setArgument('$keys', '%meritech_encryption.keys%');
+        $container->setDefinition('meritech_encryption.key_provider', $definition);
+        $container->setAlias(KeyProvider::class, 'meritech_encryption.key_provider');
+    }
+
+    private function registerEncryptors(ContainerBuilder $container, array $config): void
+    {
+        // Randomized encryptor
+        $encryptor = new Definition(AesGcmEncryptor::class);
+        $encryptor->setArguments([
+            new Reference('meritech_encryption.key_provider'),
+            $config['prefix'],
+            $config['aad'],
+        ]);
+
+        $container->setDefinition('meritech_encryption.encryptor', $encryptor);
+        $container->setAlias(AesGcmEncryptor::class, 'meritech_encryption.encryptor');
+
+        // Deterministic encryptor
+        $deterministicEncryptor = new Definition(DeterministicEncryptor::class);
+        $deterministicEncryptor->setArguments([
+            new Reference('meritech_encryption.key_provider'),
+            $config['deterministic_prefix'],
+            $config['aad'],
+        ]);
+
+        $container->setDefinition('meritech_encryption.deterministic_encryptor', $deterministicEncryptor);
+        $container->setAlias(DeterministicEncryptor::class, 'meritech_encryption.deterministic_encryptor');
+    }
+
+    private function registerBlindIndexer(ContainerBuilder $container, array $config): void
+    {
+        $definition = new Definition(BlindIndexer::class);
+        $definition->setArguments([
+            new Reference('meritech_encryption.key_provider'),
+            $config['blind_index']['algorithm'],
+            $config['blind_index']['default_bits'],
+        ]);
+
+        $container->setDefinition('meritech_encryption.blind_indexer', $definition);
+        $container->setAlias(BlindIndexer::class, 'meritech_encryption.blind_indexer');
+    }
+
+    private function registerDoctrineSubscriber(ContainerBuilder $container): void
+    {
+        $definition = new Definition(BlindIndexSubscriber::class);
+        $definition->setArguments([
+            new Reference('meritech_encryption.blind_indexer'),
+        ]);
+        $definition->addTag('doctrine.event_listener', ['event' => 'prePersist']);
+        $definition->addTag('doctrine.event_listener', ['event' => 'preUpdate']);
+
+        $container->setDefinition('meritech_encryption.blind_index_subscriber', $definition);
+    }
+
+    private function registerDbalTypes(array $config): void
+    {
+        foreach (self::TYPE_MAP as $name => $class) {
+            $configKey = str_replace('encrypted_string_deterministic', 'encrypted_string_deterministic', $name);
+            if ($config['types'][$configKey] ?? true) {
+                if (!Type::hasType($name)) {
+                    Type::addType($name, $class);
+                }
+            }
         }
-        if ($container->hasDefinition(OpenSslAesGcmEncryptor::class)) {
-            $def = $container->getDefinition(OpenSslAesGcmEncryptor::class);
-            $def->setArgument('$prefix', '%meritech_encryption.prefix%');
-            $def->setArgument('$aad', '%meritech_encryption.aad%');
-        }
-        if ($container->hasDefinition(EncryptedSubscriber::class)) {
-            $def = $container->getDefinition(EncryptedSubscriber::class);
-            $def->setArgument('$excludedEntities', '%meritech_encryption.excluded_entities%');
-        }
+    }
+
+    public function getAlias(): string
+    {
+        return 'meritech_encryption';
     }
 }

@@ -1,68 +1,85 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Meritech\EncryptionBundle\Crypto;
 
-class KeyProvider
+use Meritech\EncryptionBundle\Exception\InvalidKeyException;
+use Meritech\EncryptionBundle\Exception\KeyNotFoundException;
+
+final readonly class KeyProvider implements KeyProviderInterface
 {
-    private ?string $currentKey = null; // binary
+    private const KEY_LENGTH = 32;
 
     /**
-     * @param string      $keyEnv     the key from env (supports base64:/hex: prefixes) resolved by Symfony env processor
-     * @param string|null $currentKid optional current key id for rotation
-     * @param array       $keys       optional map of kid => key string (same encoding as $keyEnv)
+     * @param string               $primaryKey    Current encryption key (base64: or hex: prefix supported)
+     * @param string|null          $primaryKeyId  ID for current key
+     * @param array<string,string> $rotatedKeys   Old keys for decryption (kid => key)
+     * @param string|null          $blindIndexKey Separate key for blind indexes
      */
     public function __construct(
-        private readonly string $keyEnv,
-        private readonly ?string $currentKid = null,
-        private readonly array $keys = [],
+        private string $primaryKey,
+        private ?string $primaryKeyId = null,
+        private array $rotatedKeys = [],
+        private ?string $blindIndexKey = null,
     ) {
     }
 
     public function getCurrentKey(): string
     {
-        if (null === $this->currentKey) {
-            $this->currentKey = $this->parseKey($this->keyEnv);
-        }
-
-        return $this->currentKey;
+        return $this->parseKey($this->primaryKey);
     }
 
-    public function getCurrentKid(): ?string
+    public function getCurrentKeyId(): ?string
     {
-        return $this->currentKid;
+        return $this->primaryKeyId;
     }
 
-    public function getKeyForKid(?string $kid): string
+    public function getKeyById(?string $keyId): string
     {
-        if (null === $kid) {
-            return $this->getCurrentKey();
-        }
-        if (!array_key_exists($kid, $this->keys)) {
-            // Fallback to current key
+        if (null === $keyId || $keyId === $this->primaryKeyId) {
             return $this->getCurrentKey();
         }
 
-        return $this->parseKey($this->keys[$kid]);
+        if (!isset($this->rotatedKeys[$keyId])) {
+            throw new KeyNotFoundException(sprintf("Key ID '%s' not found", $keyId));
+        }
+
+        return $this->parseKey($this->rotatedKeys[$keyId]);
     }
 
-    private function parseKey(string $raw): string
+    public function getBlindIndexKey(): string
     {
-        $bin = null;
-        if (str_starts_with($raw, 'base64:')) {
-            $bin = base64_decode(substr($raw, 7), true);
-        } elseif (str_starts_with($raw, 'hex:')) {
-            $hex = substr($raw, 4);
-            $bin = hex2bin($hex);
-        } else {
-            $bin = $raw;
-        }
-        if (false === $bin || null === $bin) {
-            throw new \InvalidArgumentException('Invalid encryption key encoding.');
-        }
-        if (32 !== strlen($bin)) {
-            throw new \InvalidArgumentException('AES-256-GCM key must be exactly 32 bytes.');
+        if (null !== $this->blindIndexKey) {
+            return $this->parseKey($this->blindIndexKey);
         }
 
-        return $bin;
+        return hash('sha256', $this->getCurrentKey().':blind-index', binary: true);
+    }
+
+    public function getAllKeyIds(): array
+    {
+        $ids = array_keys($this->rotatedKeys);
+
+        if (null !== $this->primaryKeyId) {
+            array_unshift($ids, $this->primaryKeyId);
+        }
+
+        return $ids;
+    }
+
+    private function parseKey(string $encoded): string
+    {
+        $binary = match (true) {
+            str_starts_with($encoded, 'base64:') => base64_decode(substr($encoded, 7), strict: true),
+            str_starts_with($encoded, 'hex:') => hex2bin(substr($encoded, 4)),
+            default => $encoded,
+        };
+
+        if (false === $binary || self::KEY_LENGTH !== strlen($binary)) {
+            throw new InvalidKeyException(sprintf('Key must be exactly %d bytes for AES-256', self::KEY_LENGTH));
+        }
+
+        return $binary;
     }
 }

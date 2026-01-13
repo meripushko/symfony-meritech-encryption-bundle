@@ -1,18 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Meritech\EncryptionBundle\Crypto;
 
 interface EncryptorInterface
 {
-    /** Returns true if the value is an encrypted envelope. */
-    public function isEncrypted(mixed $value): bool;
+    /**
+     * Encrypt a plaintext string.
+     */
+    public function encrypt(string $plaintext): string;
 
     /**
-     * Encrypt a value (string or array) and return a versioned envelope string.
-     * $type: 'string' or 'json' to guide serialization.
+     * Decrypt a ciphertext string.
      */
-    public function encryptMixed(mixed $value, string $type): string;
+    public function decrypt(string $ciphertext): string;
 
-    /** Decrypt an envelope string back to original type (string or array). */
-    public function decryptToType(string $ciphertext): mixed;
+    /**
+     * Check if a value is already encrypted.
+     */
+    public function isEncrypted(string $value): bool;
 }

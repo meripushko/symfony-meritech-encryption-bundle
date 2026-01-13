@@ -1,21 +1,42 @@
 {
-  "name": "meritech/encrypted-attribute-bundle",
-  "description": "Symfony bundle providing an Encrypted attribute for Doctrine entities with transparent AES-256-GCM encryption.",
+  "name": "meritech/encryption-bundle",
+  "description": "Symfony bundle for transparent Doctrine column encryption with DBAL types and blind index support for searchable encrypted data.",
   "type": "symfony-bundle",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "license": "MIT",
+  "keywords": ["symfony", "doctrine", "encryption", "aes-256-gcm", "dbal", "blind-index", "searchable-encryption"],
+  "authors": [
+    {
+      "name": "Simeon Meripushkoski",
+      "email": "simeon@meritech.dev"
+    }
+  ],
   "require": {
-    "php": "^8.1",
+    "php": "^8.2",
     "ext-openssl": "*",
-    "symfony/framework-bundle": "^5.4 || ^6.4 || ^7.0",
+    "symfony/framework-bundle": "^6.4 || ^7.0",
     "doctrine/orm": "^2.15 || ^3.0",
-    "doctrine/doctrine-bundle": "^2.7"
+    "doctrine/doctrine-bundle": "^2.7",
+    "doctrine/dbal": "^3.6 || ^4.0"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "phpstan/phpstan": "^1.10",
+    "phpunit/phpunit": "^10.0"
   },
   "autoload": {
     "psr-4": {
       "Meritech\\EncryptionBundle\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Meritech\\EncryptionBundle\\Tests\\": "tests/"
+    }
+  },
   "minimum-stability": "stable",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true
+  }
 }

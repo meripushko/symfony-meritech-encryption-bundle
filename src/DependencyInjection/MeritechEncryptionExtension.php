@@ -18,9 +18,10 @@ use Meritech\EncryptionBundle\Doctrine\BlindIndexSubscriber;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Reference;
 
-final class EncryptionExtension extends Extension
+final class MeritechEncryptionExtension extends Extension implements PrependExtensionInterface
 {
     private const TYPE_MAP = [
         'encrypted_string' => EncryptedStringType::class,
@@ -29,6 +30,20 @@ final class EncryptionExtension extends Extension
         'encrypted_string_deterministic' => DeterministicEncryptedStringType::class,
         'blind_index' => BlindIndexType::class,
     ];
+
+    public function prepend(ContainerBuilder $container): void
+    {
+        // Auto-register DBAL types with Doctrine if DoctrineBundle is installed
+        if (!$container->hasExtension('doctrine')) {
+            return;
+        }
+
+        $container->prependExtensionConfig('doctrine', [
+            'dbal' => [
+                'types' => self::TYPE_MAP,
+            ],
+        ]);
+    }
 
     public function load(array $configs, ContainerBuilder $container): void
     {
@@ -65,9 +80,10 @@ final class EncryptionExtension extends Extension
             $config['prefix'],
             $config['aad'],
         ]);
+        $encryptor->setPublic(true);
 
         $container->setDefinition('meritech_encryption.encryptor', $encryptor);
-        $container->setAlias(AesGcmEncryptor::class, 'meritech_encryption.encryptor');
+        $container->setAlias(AesGcmEncryptor::class, 'meritech_encryption.encryptor')->setPublic(true);
 
         // Deterministic encryptor
         $deterministicEncryptor = new Definition(DeterministicEncryptor::class);
@@ -76,9 +92,10 @@ final class EncryptionExtension extends Extension
             $config['deterministic_prefix'],
             $config['aad'],
         ]);
+        $deterministicEncryptor->setPublic(true);
 
         $container->setDefinition('meritech_encryption.deterministic_encryptor', $deterministicEncryptor);
-        $container->setAlias(DeterministicEncryptor::class, 'meritech_encryption.deterministic_encryptor');
+        $container->setAlias(DeterministicEncryptor::class, 'meritech_encryption.deterministic_encryptor')->setPublic(true);
     }
 
     private function registerBlindIndexer(ContainerBuilder $container, array $config): void
@@ -109,17 +126,12 @@ final class EncryptionExtension extends Extension
     private function registerDbalTypes(array $config): void
     {
         foreach (self::TYPE_MAP as $name => $class) {
-            $configKey = str_replace('encrypted_string_deterministic', 'encrypted_string_deterministic', $name);
+            $configKey = $name;
             if ($config['types'][$configKey] ?? true) {
                 if (!Type::hasType($name)) {
                     Type::addType($name, $class);
                 }
             }
         }
-    }
-
-    public function getAlias(): string
-    {
-        return 'meritech_encryption';
     }
 }

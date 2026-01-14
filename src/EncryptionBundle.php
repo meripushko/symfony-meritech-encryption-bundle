@@ -7,10 +7,23 @@ namespace Meritech\EncryptionBundle;
 use Meritech\EncryptionBundle\Crypto\AesGcmEncryptor;
 use Meritech\EncryptionBundle\Crypto\DeterministicEncryptor;
 use Meritech\EncryptionBundle\DBAL\Type\AbstractEncryptedType;
+use Meritech\EncryptionBundle\DependencyInjection\MeritechEncryptionExtension;
+use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 final class EncryptionBundle extends AbstractBundle
 {
+    private ?ExtensionInterface $extension = null;
+
+    public function getContainerExtension(): ?ExtensionInterface
+    {
+        if (null === $this->extension) {
+            $this->extension = new MeritechEncryptionExtension();
+        }
+
+        return $this->extension;
+    }
+
     public function boot(): void
     {
         parent::boot();

@@ -1,25 +1,35 @@
-
-###> symfony/framework-bundle ###
-/.env.local
-/.env.local.php
-/.env.*.local
-.env.*
-/.env.*
-.env
-/.env
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
-/var/
+# Dependencies
 /vendor/
-###< symfony/framework-bundle ###
+composer.lock
 
-/config/jwt/*
-!/config/jwt/.gitkeep
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-.idea
-.vscode
+# OS
 .DS_Store
+Thumbs.db
 
-tools/*
-!.php-cs-fixer.dist.php
+# PHP CS Fixer
 .php-cs-fixer.cache
+
+# PHPUnit
+.phpunit.cache/
+.phpunit.coverage/
+phpunit.xml
+
+# PHPStan
+phpstan.neon
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Composer
+composer.lock
+
+# Tools
+/tools/

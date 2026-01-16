@@ -57,6 +57,9 @@ final class MeritechEncryptionExtension extends Extension implements PrependExte
         $this->registerDbalTypes($config);
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function registerKeyProvider(ContainerBuilder $container, array $config): void
     {
         $definition = new Definition(KeyProvider::class);
@@ -71,6 +74,9 @@ final class MeritechEncryptionExtension extends Extension implements PrependExte
         $container->setAlias(KeyProvider::class, 'meritech_encryption.key_provider');
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function registerEncryptors(ContainerBuilder $container, array $config): void
     {
         // Randomized encryptor
@@ -98,6 +104,9 @@ final class MeritechEncryptionExtension extends Extension implements PrependExte
         $container->setAlias(DeterministicEncryptor::class, 'meritech_encryption.deterministic_encryptor')->setPublic(true);
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function registerBlindIndexer(ContainerBuilder $container, array $config): void
     {
         $definition = new Definition(BlindIndexer::class);
@@ -123,6 +132,9 @@ final class MeritechEncryptionExtension extends Extension implements PrependExte
         $container->setDefinition('meritech_encryption.blind_index_subscriber', $definition);
     }
 
+    /**
+     * @param array<string, mixed> $config
+     */
     private function registerDbalTypes(array $config): void
     {
         foreach (self::TYPE_MAP as $name => $class) {

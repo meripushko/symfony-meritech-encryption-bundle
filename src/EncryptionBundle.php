@@ -13,7 +13,7 @@ use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
 final class EncryptionBundle extends AbstractBundle
 {
-    private ?ExtensionInterface $extension = null;
+    protected ExtensionInterface|false|null $extension = null;
 
     public function getContainerExtension(): ?ExtensionInterface
     {
@@ -21,7 +21,7 @@ final class EncryptionBundle extends AbstractBundle
             $this->extension = new MeritechEncryptionExtension();
         }
 
-        return $this->extension;
+        return $this->extension ?: null;
     }
 
     public function boot(): void

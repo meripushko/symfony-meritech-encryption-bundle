@@ -75,6 +75,9 @@ final readonly class BlindIndexSubscriber
         }
     }
 
+    /**
+     * @param \ReflectionClass<object> $reflection
+     */
     private function setBlindIndexValue(
         object $entity,
         \ReflectionClass $reflection,
@@ -85,6 +88,9 @@ final readonly class BlindIndexSubscriber
         $property->setValue($entity, $value);
     }
 
+    /**
+     * @param \ReflectionClass<object> $class
+     */
     private function generateContext(\ReflectionClass $class, \ReflectionProperty $property): string
     {
         return $class->getShortName().'.'.$property->getName();

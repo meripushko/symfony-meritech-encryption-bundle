@@ -2,27 +2,42 @@
   "name": "meritech/encryption-bundle",
   "description": "Symfony bundle for transparent Doctrine column encryption with DBAL types and blind index support for searchable encrypted data.",
   "type": "symfony-bundle",
-  "version": "1.0.0",
   "license": "MIT",
-  "keywords": ["symfony", "doctrine", "encryption", "aes-256-gcm", "dbal", "blind-index", "searchable-encryption"],
+  "keywords": [
+    "symfony",
+    "symfony-bundle",
+    "doctrine",
+    "encryption",
+    "aes-256-gcm",
+    "dbal",
+    "blind-index",
+    "searchable-encryption",
+    "security",
+    "database-encryption"
+  ],
   "authors": [
     {
       "name": "Simeon Meripushkoski",
       "email": "simeon@meritech.dev"
     }
   ],
+  "homepage": "https://github.com/meritech/encryption-bundle",
+  "support": {
+    "issues": "https://github.com/meritech/encryption-bundle/issues",
+    "source": "https://github.com/meritech/encryption-bundle"
+  },
   "require": {
     "php": "^8.2",
     "ext-openssl": "*",
-    "symfony/framework-bundle": "^6.4 || ^7.0",
-    "doctrine/orm": "^2.15 || ^3.0",
+    "doctrine/dbal": "^3.6 || ^4.0",
     "doctrine/doctrine-bundle": "^2.7",
-    "doctrine/dbal": "^3.6 || ^4.0"
+    "doctrine/orm": "^2.15 || ^3.0",
+    "symfony/framework-bundle": "^6.4 || ^7.0"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.0",
     "phpstan/phpstan": "^1.10",
-    "phpunit/phpunit": "^10.0"
+    "phpunit/phpunit": "^10.0 || ^11.0"
   },
   "autoload": {
     "psr-4": {

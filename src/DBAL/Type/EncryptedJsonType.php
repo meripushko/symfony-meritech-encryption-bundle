@@ -28,6 +28,9 @@ class EncryptedJsonType extends AbstractEncryptedType
         );
     }
 
+    /**
+     * @return array<mixed>
+     */
     protected function deserializeFromDecryption(string $value): array
     {
         return json_decode($value, associative: true, flags: JSON_THROW_ON_ERROR);

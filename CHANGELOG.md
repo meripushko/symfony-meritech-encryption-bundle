@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2025-01-17
+
+### Fixed
+
+- Bumped PHPUnit minimum version from `^10.0` to `^10.1` to fix `prefer-lowest` CI builds (the `<source>` element in `phpunit.xml.dist` requires PHPUnit 10.1+)
+
+## [1.0.3] - 2025-01-17
+
+### Added
+
+- GitHub Actions CI workflow with test matrix for PHP 8.2, 8.3, and 8.4
+- PHPStan static analysis at level 8
+- PHP CS Fixer code style checks in CI
+- Comprehensive PHPUnit test suite for crypto components and DBAL types
+- PHPUnit configuration (`phpunit.xml.dist`)
+- PHPStan configuration (`phpstan.neon.dist`)
+- `.gitattributes` for line ending normalization and export-ignore rules
+- Makefile with helpful development commands (`make test`, `make phpstan`, `make ci`)
+
+### Changed
+
+- Updated `composer.json` with expanded keywords and support URLs
+- CI uses `composer update` instead of `composer install` for cross-PHP version compatibility
+- Removed `composer.lock` from version control (libraries should not commit lock files)
+
+### Fixed
+
+- PHPStan level 8 compliance - added proper type annotations throughout codebase
+- CI compatibility with PHP 8.2 by not locking to PHP 8.4-only dependencies
+
 ## [1.0.0] - 2025-01-16
 
 ### Added
